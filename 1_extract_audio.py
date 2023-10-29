@@ -1,3 +1,4 @@
+# 提取音频
 import argparse
 from moviepy.editor import *
 import os
@@ -11,6 +12,7 @@ def extract_audio(video_path: str):
     video = VideoFileClip(video_path)
     audio = video.audio
     audio.write_audiofile(audio_path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Arguments")
