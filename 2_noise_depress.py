@@ -82,4 +82,4 @@ if __name__ == '__main__':
 
     with concurrent.futures.ProcessPoolExecutor(args.n_processes) as executor:
         executor.map(depress_nosie, sub_tasks)
-    print(f"noise_depressed_audios_dir={noise_depressed_audios_dir}")
+    print(f"result:{noise_depressed_audios_dir}")
