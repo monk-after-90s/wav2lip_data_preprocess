@@ -38,4 +38,4 @@ if not video_paths:
     raise FileNotFoundError("Empty directory")
 with concurrent.futures.ProcessPoolExecutor(args.n_processes) as executor:
     executor.map(extract_audio, video_paths)
-print(f"{audios_dir=}")
+print(f"audios_dir={audios_dir}")
