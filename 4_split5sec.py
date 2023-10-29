@@ -70,4 +70,4 @@ if __name__ == '__main__':
         # 遍历结果
         for result in results:
             result
-    print(f"split_videos_dir={split_videos_dir}")
+    print(f"result:{split_videos_dir}")
