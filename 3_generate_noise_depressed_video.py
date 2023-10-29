@@ -62,4 +62,4 @@ if __name__ == '__main__':
         i += 1
     with concurrent.futures.ProcessPoolExecutor(args.n_processes) as executor:
         executor.map(generate_noise_depressed_video, sub_tasks)
-    print(f"noise_depressed_videos_dir={noise_depressed_videos_dir}")
+    print(f"result:{noise_depressed_videos_dir}")
