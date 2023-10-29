@@ -3,6 +3,11 @@ import argparse
 import os
 import sys
 
+if not os.path.exists("./DTLN"):
+    import subprocess
+
+    subprocess.run(['git', 'clone', "https://github.com/breizhn/DTLN.git"], check=True)
+
 sys.path.append(os.path.abspath("./DTLN"))
 from typing import List
 from DTLN.DTLN_model import DTLN_model
