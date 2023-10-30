@@ -1,11 +1,11 @@
-# 将视频转为帧图片保存
+# 将视频转为帧图片保存 提取视频的音轨保存为wav文件
 import sys
 from typing import List
 
 if sys.version_info[0] < 3 and sys.version_info[1] < 2:
     raise Exception("Must be using >= Python 3.2")
 from os import path
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, Future
 import numpy as np
 import argparse, os, cv2, traceback, subprocess
 from tqdm import tqdm
@@ -26,9 +26,11 @@ def process_video_file(vfile: str, args, gpu_id):
             break
         frames.append(frame)
     # 保存该视频的帧图片和声音的文件夹
-    output_root = os.path.join(os.path.dirname(videos_dir), "frames_audios")
     output_dir = vfile.replace(videos_dir, output_root)[:-4]
     os.makedirs(output_dir, exist_ok=True)
+    # 音频文件保存位置
+    wavpath = path.join(output_dir, 'audio.wav')
+    process_audio_file_fut: Future = audios_pool_executor.submit(process_audio_file, vfile, wavpath)
 
     batches = [frames[i:i + args.batch_size] for i in range(0, len(frames), args.batch_size)]
 
@@ -43,17 +45,11 @@ def process_video_file(vfile: str, args, gpu_id):
 
             x1, y1, x2, y2 = map(int, f[0][:-1])
             cv2.imwrite(path.join(output_dir, '{}.png'.format(i)), fb[j][y1:y2, x1:x2])
+    # 抛出可能的报错
+    process_audio_file_fut.result()
 
 
-def process_audio_file(vfile, args):
-    vidname = os.path.basename(vfile).split('.')[0]
-    dirname = vfile.split('/')[-2]
-
-    fulldir = path.join(args.preprocessed_root, dirname, vidname)
-    os.makedirs(fulldir, exist_ok=True)
-
-    wavpath = path.join(fulldir, 'audio.wav')
-
+def process_audio_file(vfile, wavpath):
     command = template.format(vfile, wavpath)
     subprocess.call(command, shell=True)
 
@@ -76,10 +72,12 @@ if __name__ == '__main__':
                         help="Directory whose file tree contains mp4 files",
                         default="dataset/origin_noise_depressed_pieces",
                         type=str)
+    parser.add_argument("--n_processes", help="Process workers number", type=int, default=os.cpu_count() + 2)
     # parser.add_argument("--output_dir", help="Directory which contains the preprocessed dataset", required=True)
     args = parser.parse_args()
 
     videos_dir = os.path.abspath(args.input_videos_dir)
+    output_root = os.path.join(os.path.dirname(videos_dir), "frames_audios")
     if not os.path.isdir(videos_dir):
         raise ValueError("please input the path of a directory")
 
@@ -103,17 +101,8 @@ if __name__ == '__main__':
     print('Started processing for {} with {} GPUs'.format(videos_dir, args.ngpu))
 
     jobs = [(video_path, args, i % args.ngpu) for i, video_path in enumerate(video_paths)]
-    p = ThreadPoolExecutor(args.ngpu)
-    futures = [p.submit(mp_handler, j) for j in jobs]
+    imgs_pool_executor = ThreadPoolExecutor(args.ngpu)
+    audios_pool_executor = ThreadPoolExecutor(args.n_processes)
+    futures = [imgs_pool_executor.submit(mp_handler, j) for j in jobs]
     _ = [r.result() for r in tqdm(as_completed(futures), total=len(futures))]
-
-    # print('Dumping audios...')#ToDo
-    #
-    # for vfile in tqdm(filelist):
-    #     try:
-    #         process_audio_file(vfile, args)
-    #     except KeyboardInterrupt:
-    #         exit(0)
-    #     except:
-    #         traceback.print_exc()
-    #         continue
+    print(f"result:{output_root}")
