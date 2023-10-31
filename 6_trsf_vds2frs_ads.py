@@ -67,7 +67,7 @@ def mp_handler(job):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--ngpu', help='Number of GPUs across which to run in parallel', default=1, type=int)
-    parser.add_argument('--batch_size', help='Single GPU Face detection batch size', default=16, type=int)
+    parser.add_argument('--batch_size', help='Single GPU Face detection batch size', default=32768, type=int)
     parser.add_argument("--input_videos_dir",
                         help="Directory whose file tree contains mp4 files",
                         default="dataset/origin_noise_depressed_pieces",
