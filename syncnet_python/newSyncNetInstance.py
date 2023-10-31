@@ -6,6 +6,7 @@ import numpy
 import time, subprocess, os, math, glob
 import cv2
 import python_speech_features
+import torch
 from scipy.io import wavfile
 from SyncNetModel import *
 
@@ -34,10 +35,10 @@ def calc_pdist(feat1, feat2, vshift=10):  # vshift = 15
 
 class SyncNetInstance(torch.nn.Module):
 
-    def __init__(self, dropout=0, num_layers_in_fc_layers=1024, verbose=False):
-        super(SyncNetInstance, self).__init__();
+    def __init__(self, dropout=0, num_layers_in_fc_layers=1024, verbose=False, device="cuda"):
+        super(SyncNetInstance, self).__init__()
 
-        self.__S__ = S(num_layers_in_fc_layers=num_layers_in_fc_layers).cuda();
+        self.__S__ = S(num_layers_in_fc_layers=num_layers_in_fc_layers).cuda(torch.device(device))
         self.verbose = verbose
 
     def separate_frames(self, opt, videofile):
@@ -129,6 +130,99 @@ class SyncNetInstance(torch.nn.Module):
         minval, minidx = torch.min(mdist, 0)
 
         offset = (opt.vshift - minidx).item()
+        conf = round((torch.median(mdist) - minval).item(), 4)
+        dist = round(minval.item(), 4)
+        print(offset, conf, dist)
+
+        if self.verbose:
+            print(f'AV offset: \t{offset}\nMin dist: \t{dist}\nConfidence: \t{conf}')
+
+        return offset, conf, dist
+
+    def evaluate_frames_and_audio(self, frames_dir: str, audio_path: str, batch_size: int, vshift: int):
+        """
+        frame_dir: 视频的逐帧图片
+        audio_path: 视频的音轨文件
+        """
+        self.__S__.eval()
+        # ========== ==========
+        # Load video
+        # ========== ==========
+
+        images = []
+
+        flist = glob.glob(os.path.join(frames_dir, '*.jpg'))  # frames
+        flist.sort()
+
+        for fname in flist:
+            # images.append(cv2.imread(fname))
+            images.append(self.pad_image_to_square(fname))
+
+        im = numpy.stack(images, axis=3)  # (224, 224, 3, 752), 752는 프레임 개수
+        im = numpy.expand_dims(im, axis=0)  # (1, 224, 224, 3, 752)
+        im = numpy.transpose(im, (0, 3, 4, 1, 2))  # (1, 3, 752, 224, 224)
+
+        imtv = torch.autograd.Variable(torch.from_numpy(im.astype(float)).float())
+
+        # ========== ==========
+        # Load audio
+        # ========== ==========
+
+        sample_rate, audio = wavfile.read(audio_path)  # sample rate: 44100
+        mfcc = zip(*python_speech_features.mfcc(audio, sample_rate))
+        mfcc = numpy.stack([numpy.array(i) for i in mfcc])  # (13, 3003)
+
+        cc = numpy.expand_dims(numpy.expand_dims(mfcc, axis=0), axis=0)  # (1, 1, 13, 3003)
+        cct = torch.autograd.Variable(torch.from_numpy(cc.astype(float)).float())
+
+        # ========== ==========
+        # Check audio and video input length
+        # ========== ==========
+
+        if (float(len(audio)) / sample_rate) != (float(len(images)) / 25):
+            if self.verbose:
+                print("WARNING: Audio (%.4fs) and video (%.4fs) lengths are different." % (
+                    float(len(audio)) / sample_rate, float(len(images)) / 25))
+
+        min_length = min(len(images), math.floor(len(audio) / 640))
+
+        # ========== ==========
+        # Generate video and audio feats
+        # ========== ==========
+
+        lastframe = min_length - 5
+        im_feat = []
+        cc_feat = []
+
+        tS = time.time()
+        for i in range(0, lastframe, batch_size):
+            im_batch = [imtv[:, :, vframe:vframe + 5, :, :] for vframe in range(i, min(lastframe, i + batch_size))]
+            im_in = torch.cat(im_batch, 0)  # (20, 3, 5, 224, 224)
+            im_out = self.__S__.forward_lip(im_in.cuda())  # (20, 1024)
+            im_feat.append(im_out.data.cpu())
+
+            cc_batch = [cct[:, :, :, vframe * 4:vframe * 4 + 20] for vframe in
+                        range(i, min(lastframe, i + batch_size))]
+            cc_in = torch.cat(cc_batch, 0)  # (20, 1, 13, 20)
+            cc_out = self.__S__.forward_aud(cc_in.cuda())  # (20, 1024)
+            cc_feat.append(cc_out.data.cpu())
+
+        im_feat = torch.cat(im_feat, 0)  # (746, 1024)
+        cc_feat = torch.cat(cc_feat, 0)  # (746, 1024)
+
+        # ========== ==========
+        # Compute offset
+        # ========== ==========
+
+        if self.verbose:
+            print('Compute time %.3f sec.' % (time.time() - tS))
+
+        dists = calc_pdist(im_feat, cc_feat, vshift=vshift)  # after stack: (31, 746)
+        mdist = torch.mean(torch.stack(dists, 1), 1)  # (31)
+
+        minval, minidx = torch.min(mdist, 0)
+
+        offset = (vshift - minidx).item()
         conf = round((torch.median(mdist) - minval).item(), 4)
         dist = round(minval.item(), 4)
         print(offset, conf, dist)
