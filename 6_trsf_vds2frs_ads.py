@@ -44,7 +44,7 @@ def process_video_file(vfile: str, args, gpu_id):
                 continue
 
             x1, y1, x2, y2 = map(int, f[0][:-1])
-            cv2.imwrite(path.join(output_dir, '{}.png'.format(i)), fb[j][y1:y2, x1:x2])
+            cv2.imwrite(path.join(output_dir, '{}.jpg'.format(i)), fb[j][y1:y2, x1:x2])
     # 抛出可能的报错
     process_audio_file_fut.result()
 
