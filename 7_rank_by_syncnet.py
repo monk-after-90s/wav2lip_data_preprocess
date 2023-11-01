@@ -40,7 +40,7 @@ if __name__ == '__main__':
                         default=torch.cuda.device_count(),
                         type=int)
     parser.add_argument("--frames_audios_dir",
-                        help="The directory whose file tree contains frame png images and audios",
+                        help="The directory whose file tree contains frame jpg images and audios",
                         type=str,
                         default="dataset/frames_audios")
     parser.add_argument('--batch_size', type=int, default='1048576', help='Batch size when running syncnet_python')
