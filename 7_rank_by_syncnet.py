@@ -43,7 +43,7 @@ if __name__ == '__main__':
                         help="The directory whose file tree contains frame png images and audios",
                         type=str,
                         default="dataset/frames_audios")
-    parser.add_argument('--batch_size', type=int, default='32', help='Batch size when running syncnet_python')
+    parser.add_argument('--batch_size', type=int, default='1048576', help='Batch size when running syncnet_python')
     parser.add_argument('--vshift', type=int, default='15', help='syncnet_python argument')
     args = parser.parse_args()
 
