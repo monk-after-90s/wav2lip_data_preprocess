@@ -38,7 +38,8 @@ class SyncNetInstance(torch.nn.Module):
     def __init__(self, dropout=0, num_layers_in_fc_layers=1024, verbose=False, device="cuda"):
         super(SyncNetInstance, self).__init__()
 
-        self.__S__ = S(num_layers_in_fc_layers=num_layers_in_fc_layers).cuda(torch.device(device))
+        self.device: torch.device = torch.device(device)
+        self.__S__ = S(num_layers_in_fc_layers=num_layers_in_fc_layers).cuda(self.device)
         self.verbose = verbose
 
     def separate_frames(self, opt, videofile):
@@ -198,13 +199,13 @@ class SyncNetInstance(torch.nn.Module):
         for i in range(0, lastframe, batch_size):
             im_batch = [imtv[:, :, vframe:vframe + 5, :, :] for vframe in range(i, min(lastframe, i + batch_size))]
             im_in = torch.cat(im_batch, 0)  # (20, 3, 5, 224, 224)
-            im_out = self.__S__.forward_lip(im_in.cuda())  # (20, 1024)
+            im_out = self.__S__.forward_lip(im_in.cuda(self.device))  # (20, 1024)
             im_feat.append(im_out.data.cpu())
 
             cc_batch = [cct[:, :, :, vframe * 4:vframe * 4 + 20] for vframe in
                         range(i, min(lastframe, i + batch_size))]
             cc_in = torch.cat(cc_batch, 0)  # (20, 1, 13, 20)
-            cc_out = self.__S__.forward_aud(cc_in.cuda())  # (20, 1024)
+            cc_out = self.__S__.forward_aud(cc_in.cuda(self.device))  # (20, 1024)
             cc_feat.append(cc_out.data.cpu())
 
         im_feat = torch.cat(im_feat, 0)  # (746, 1024)
