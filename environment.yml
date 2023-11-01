@@ -1,5 +1,12 @@
 name: wav2lip_preprocess
 channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/   #清华源
+  - http://mirrors.aliyun.com/pypi/simple/   #阿里源
+  - https://mirrors.ustc.edu.cn/anaconda/pkgs/free/    #中科大源
+  - rusty1s
+  - pytorch
+  - open3d-admin
+  - nvidia
   - conda-forge
   - defaults
 dependencies:
