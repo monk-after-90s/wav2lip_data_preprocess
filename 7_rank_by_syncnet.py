@@ -24,7 +24,7 @@ def gpu_work(video_frams_audios_dir: str, args, gpuid):
         args.vshift
     )
     # 按照offset分类保存
-    rank = min(math.floor(abs(offset)), 4)
+    rank = min(math.floor(abs(offset)), 20)
     rank_dir = os.path.join(ranked_output_root, f"rank{rank}")
     output_dir = video_frams_audios_dir.replace(frames_audios_dir, rank_dir)
     if os.path.exists(output_dir):
