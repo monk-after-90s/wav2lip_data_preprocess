@@ -15,7 +15,7 @@ def extract_audio(video_path: str):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Arguments")
+    parser = argparse.ArgumentParser(description="提取音频")
     parser.add_argument("--videos_dir", help="The directory which contains mp4 videos", type=str,
                         default="dataset/origin")
     parser.add_argument("--n_processes", help="Workers number", type=int, default=os.cpu_count() + 2)

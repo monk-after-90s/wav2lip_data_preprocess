@@ -33,7 +33,7 @@ def split_video(video_paths: List[str], clip_duration=5):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Arguments")
+    parser = argparse.ArgumentParser(description="将每个视频切成5s的多个片段")
     parser.add_argument("--noise_depressed_videos_dir",
                         help="The directory which contains noise depressed videos",
                         type=str,

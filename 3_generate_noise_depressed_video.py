@@ -24,7 +24,7 @@ def generate_noise_depressed_video(audio_paths: List[str]):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Arguments")
+    parser = argparse.ArgumentParser(description="生成降噪视频")
     parser.add_argument("--videos_dir", help="The directory which contains mp4 videos", type=str,
                         default="dataset/origin")
     parser.add_argument("--noise_depressed_audios_dir",

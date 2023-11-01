@@ -62,7 +62,7 @@ def mp_handler(job):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="将视频转为帧图片保存；提取视频的音轨保存为wav文件")
     parser.add_argument('--ngpu',
                         help='Number of GPUs across which to run in parallel',
                         default=torch.cuda.device_count(),

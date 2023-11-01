@@ -47,7 +47,7 @@ def depress_nosie(audio_paths: List[str]):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Arguments")
+    parser = argparse.ArgumentParser(description="音频降噪")
     parser.add_argument("--origin_audios_dir", help="The directory which contains wav audios", type=str,
                         default="dataset/origin_audios")
     parser.add_argument("--n_processes", help="Workers number", type=int, default=os.cpu_count() + 2)

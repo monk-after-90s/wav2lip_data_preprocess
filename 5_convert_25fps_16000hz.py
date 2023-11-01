@@ -60,7 +60,7 @@ def transfer_videos_fps_sr(video_paths):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Arguments")
+    parser = argparse.ArgumentParser(description="转视频帧率到25fps和音轨16000hz")
     parser.add_argument("--videos_pieces_dir",
                         help="The directory which contains noise depressed videos pieces",
                         type=str,

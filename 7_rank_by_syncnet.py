@@ -34,7 +34,7 @@ def gpu_work(video_frams_audios_dir: str, args, gpuid):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Arguments")
+    parser = argparse.ArgumentParser(description="使用syncnet_python依据音画同步程度进行打分分组")
     parser.add_argument('--ngpu',
                         help='Number of GPUs across which to run in parallel',
                         default=torch.cuda.device_count(),
