@@ -10,6 +10,7 @@ from tqdm import tqdm
 from syncnet_python.newSyncNetInstance import SyncNetInstance
 import math
 import shutil
+import torch
 
 
 def gpu_work(video_frams_audios_dir: str, args, gpuid):
@@ -34,7 +35,10 @@ def gpu_work(video_frams_audios_dir: str, args, gpuid):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Arguments")
-    parser.add_argument('--ngpu', help='Number of GPUs across which to run in parallel', default=1, type=int)
+    parser.add_argument('--ngpu',
+                        help='Number of GPUs across which to run in parallel',
+                        default=torch.cuda.device_count(),
+                        type=int)
     parser.add_argument("--frames_audios_dir",
                         help="The directory whose file tree contains frame png images and audios",
                         type=str,
