@@ -72,4 +72,4 @@ if __name__ == '__main__':
     gpus_pool_executor = ThreadPoolExecutor(args.ngpu)
     futures = [gpus_pool_executor.submit(gpu_work, *j) for j in jobs]
     _ = [r.result() for r in tqdm(as_completed(futures), total=len(futures))]
-    # print(f"result:{output_root}")
+    print(f"result:{ranked_output_root}")
