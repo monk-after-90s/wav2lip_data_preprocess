@@ -28,10 +28,6 @@ def process_video_file(vfile: str, args, gpu_id):
     # 保存该视频的帧图片和声音的文件夹
     output_dir = vfile.replace(videos_dir, output_root)[:-4]
     os.makedirs(output_dir, exist_ok=True)
-    # 音频文件保存位置
-    wavpath = path.join(output_dir, 'audio.wav')
-    process_audio_file_fut: Future = audios_pool_executor.submit(process_audio_file, vfile, wavpath)
-
     batches = [frames[i:i + args.batch_size] for i in range(0, len(frames), args.batch_size)]
 
     i = -1
@@ -45,13 +41,14 @@ def process_video_file(vfile: str, args, gpu_id):
 
             x1, y1, x2, y2 = map(int, f[0][:-1])
             cv2.imwrite(path.join(output_dir, '{}.jpg'.format(i)), fb[j][y1:y2, x1:x2])
-    # 抛出可能的报错
-    process_audio_file_fut.result()
+
+    process_audio_file(vfile, path.join(output_dir, 'audio.wav'))
 
 
 def process_audio_file(vfile, wavpath):
     command = template.format(vfile, wavpath)
-    subprocess.call(command, shell=True)
+    # subprocess.run(command, shell=True)
+    os.system(command)
 
 
 def mp_handler(job):
