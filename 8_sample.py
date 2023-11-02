@@ -22,7 +22,7 @@ if not os.path.isdir(frames_audios_dir):
 video_frams_audios_dirs = set()
 for root, dirs, files in os.walk(frames_audios_dir):
     if "audio.wav" in files and any(".jpg" in file for file in files):
-        video_frams_audios_dirs.add(root)
+        video_frams_audios_dirs.add(os.path.relpath(root, args.frames_audios_dir))
 if not video_frams_audios_dirs:
     raise FileNotFoundError("Empty directory")
 
