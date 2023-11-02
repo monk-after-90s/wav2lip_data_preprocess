@@ -92,7 +92,7 @@ if __name__ == '__main__':
             video_paths.append(video_path)
     if not video_paths:
         raise FileNotFoundError("Empty directory")
-    # 按GPU拆分任务
+    # 按GPU拆分任务 todo blazeface裁剪大小跟sfd不一样
     fa: List[face_alignment.FaceAlignment] = [face_alignment.FaceAlignment(face_alignment.LandmarksType.TWO_HALF_D,
                                                                            device='cuda:{}'.format(gpuid),
                                                                            face_detector='blazeface')
