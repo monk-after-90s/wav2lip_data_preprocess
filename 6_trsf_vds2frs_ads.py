@@ -67,7 +67,7 @@ if __name__ == '__main__':
                         help='Number of GPUs across which to run in parallel',
                         default=torch.cuda.device_count(),
                         type=int)
-    parser.add_argument('--batch_size', help='Single GPU Face detection batch size', default=32768, type=int)
+    parser.add_argument('--batch_size', help='Single GPU Face detection batch size', default=8, type=int)
     parser.add_argument("--input_videos_dir",
                         help="Directory whose file tree contains mp4 files",
                         default="dataset/origin_noise_depressed_pieces",
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     # 按GPU拆分任务 todo blazeface裁剪大小跟sfd不一样
     fa: List[face_alignment.FaceAlignment] = [face_alignment.FaceAlignment(face_alignment.LandmarksType.TWO_HALF_D,
                                                                            device='cuda:{}'.format(gpuid),
-                                                                           face_detector='blazeface')
+                                                                           face_detector='sfd')
                                               for gpuid in range(args.ngpu)]
     template = 'ffmpeg -loglevel panic -y -i {} -strict -2 {}'
     print('Started processing for {} with {} GPUs'.format(videos_dir, args.ngpu))
