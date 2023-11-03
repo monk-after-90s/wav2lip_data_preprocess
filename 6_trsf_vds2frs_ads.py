@@ -25,22 +25,29 @@ def process_video_file(vfile: str, args, gpu_id):
             video_stream.release()
             break
         frames.append(frame)
-    # 保存该视频的帧图片和声音的文件夹
-    output_dir = vfile.replace(videos_dir, output_root)[:-4]
-    os.makedirs(output_dir, exist_ok=True)
     batches = [frames[i:i + args.batch_size] for i in range(0, len(frames), args.batch_size)]
 
-    i = -1
+    face_rects = []
     for fb in batches:
         preds = fa[gpu_id].face_detector.detect_from_batch(torch.Tensor(np.asarray(fb).transpose(0, 3, 1, 2)))
 
         for j, f in enumerate(preds):
-            i += 1
             if f is None:
                 continue
-
             x1, y1, x2, y2 = map(int, f[0][:-1])
-            cv2.imwrite(path.join(output_dir, '{}.jpg'.format(i)), fb[j][y1:y2, x1:x2])
+            # 分辨率不达标
+            if abs(x2 - x1) < args.resolution_ratio or abs(y2 - y1) < args.resolution_ratio:
+                print(f"视频'{vfile}'因分辨率不达标被舍弃")
+                return
+
+            face_rects.append(fb[j][y1:y2, x1:x2])
+
+    # 保存该视频的帧图片和声音的文件夹
+    output_dir = vfile.replace(videos_dir, output_root)[:-4]
+    os.makedirs(output_dir, exist_ok=True)
+    # 存为图片
+    for i, face_rect in enumerate(face_rects):
+        cv2.imwrite(path.join(output_dir, '{}.jpg'.format(i)), face_rect)
 
     process_audio_file(vfile, path.join(output_dir, 'audio.wav'))
 
@@ -68,6 +75,9 @@ if __name__ == '__main__':
                         default=torch.cuda.device_count(),
                         type=int)
     parser.add_argument('--batch_size', help='Single GPU Face detection batch size', default=8, type=int)
+    parser.add_argument('--resolution_ratio',
+                        help='Resolution ratio requirements on both x and y direction of a face',
+                        default=288, type=int)
     parser.add_argument("--input_videos_dir",
                         help="Directory whose file tree contains mp4 files",
                         default="dataset/origin_noise_depressed_pieces",
