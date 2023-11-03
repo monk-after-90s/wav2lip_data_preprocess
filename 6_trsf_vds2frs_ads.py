@@ -82,7 +82,6 @@ if __name__ == '__main__':
                         help="Directory whose file tree contains mp4 files",
                         default="dataset/origin_noise_depressed_pieces",
                         type=str)
-    parser.add_argument("--n_processes", help="Process workers number", type=int, default=os.cpu_count() + 2)
     # parser.add_argument("--output_dir", help="Directory which contains the preprocessed dataset", required=True)
     args = parser.parse_args()
 
@@ -112,7 +111,6 @@ if __name__ == '__main__':
 
     jobs = [(video_path, args, i % args.ngpu) for i, video_path in enumerate(video_paths)]
     imgs_pool_executor = ThreadPoolExecutor(args.ngpu)
-    audios_pool_executor = ThreadPoolExecutor(args.n_processes)
     futures = [imgs_pool_executor.submit(mp_handler, j) for j in jobs]
     _ = [r.result() for r in tqdm(as_completed(futures), total=len(futures))]
     print(f"result:{output_root}")
