@@ -5,9 +5,9 @@ from typing import List
 if sys.version_info[0] < 3 and sys.version_info[1] < 2:
     raise Exception("Must be using >= Python 3.2")
 from os import path
-from concurrent.futures import ThreadPoolExecutor, as_completed, Future
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
-import argparse, os, cv2, traceback, subprocess
+import argparse, os, cv2, traceback
 from tqdm import tqdm
 import face_alignment
 import torch
