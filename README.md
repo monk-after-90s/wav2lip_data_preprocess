@@ -25,4 +25,7 @@ python 1_extract_audio.py  --help
 python 1_extract_audio.py && python 2_noise_depress.py && ...
 ```
 
-后台运行也可以加上“nohup ... &”。
+后台运行也可以加上“nohup ... &”，比如：
+```shell
+nohup python 1_extract_audio.py && nohup python 2_noise_depress.py && ... &
+```
