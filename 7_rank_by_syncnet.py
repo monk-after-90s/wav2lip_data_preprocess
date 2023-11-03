@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+import traceback
 
 sys.path.append(os.path.abspath("./syncnet_python"))
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -71,5 +72,10 @@ if __name__ == '__main__':
             for i, video_frams_audios_dir in enumerate(video_frams_audios_dirs)]
     gpus_pool_executor = ThreadPoolExecutor(args.ngpu)
     futures = [gpus_pool_executor.submit(gpu_work, *j) for j in jobs]
-    _ = [r.result() for r in tqdm(as_completed(futures), total=len(futures))]
+    for i, r in tqdm(enumerate(as_completed(futures)), total=len(futures)):
+        try:
+            r.result()
+        except:
+            print(f"Job:'{jobs[i][0]}' failed. Error:")
+            traceback.print_exc()
     print(f"result:{ranked_output_root}")
