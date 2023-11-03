@@ -1,5 +1,5 @@
 # wav2lip训练数据预处理综合工具
-
+## 分支“cut_face_by_blazeface”出现吴检人脸的几率比sfd高，该分支停止开发与探索。
 取代原项目的预处理脚本
 
 ## Install
