@@ -1,4 +1,4 @@
-# 将视频转为帧图片保存 提取视频的音轨保存为wav文件
+# 将视频转为帧图片保存 提取视频的音轨保存为wav文件、mel频谱文件
 import sys
 from typing import List
 
@@ -11,6 +11,7 @@ import argparse, os, cv2, traceback
 from tqdm import tqdm
 import face_alignment
 import torch
+import audio
 
 
 # template2 = 'ffmpeg -hide_banner -loglevel panic -threads 1 -y -i {} -async 1 -ac 1 -vn -acodec pcm_s16le -ar 16000 {}'
@@ -52,10 +53,15 @@ def process_video_file(vfile: str, args, gpu_id):
     process_audio_file(vfile, path.join(output_dir, 'audio.wav'))
 
 
-def process_audio_file(vfile, wavpath):
-    command = template.format(vfile, wavpath)
+def process_audio_file(vfile, wav_path):
+    command = template.format(vfile, wav_path)
     # subprocess.run(command, shell=True)
     os.system(command)
+    # 存mel频谱
+    wav = audio.load_wav(wav_path, 16000)
+    mel = audio.melspectrogram(wav).T  # (T, 80)
+    mel_path = os.path.join(os.path.dirname(wav_path), "audio_mel.npy")
+    np.save(mel_path, mel)
 
 
 def mp_handler(job):
