@@ -17,6 +17,13 @@ import audio
 # template2 = 'ffmpeg -hide_banner -loglevel panic -threads 1 -y -i {} -async 1 -ac 1 -vn -acodec pcm_s16le -ar 16000 {}'
 
 def process_video_file(vfile: str, args, gpu_id):
+    # 保存该视频的帧图片和声音的文件夹
+    output_dir = vfile.replace(videos_dir, output_root)[:-4]
+    # 检查是否已经存在
+    if os.path.exists(path.join(output_dir, 'audio_mel.npy')):
+        print(f"'{output_dir}'之前已经完成，本次跳过。")
+        return
+
     video_stream = cv2.VideoCapture(vfile)
 
     frames = []
@@ -43,8 +50,6 @@ def process_video_file(vfile: str, args, gpu_id):
 
             face_rects.append(fb[j][y1:y2, x1:x2])
 
-    # 保存该视频的帧图片和声音的文件夹
-    output_dir = vfile.replace(videos_dir, output_root)[:-4]
     os.makedirs(output_dir, exist_ok=True)
     # 存为图片
     for i, face_rect in enumerate(face_rects):
