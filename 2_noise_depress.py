@@ -18,7 +18,7 @@ import traceback
 
 def depress_nosie(audio_paths: List[str]):
     if not audio_paths: return
-    # 降噪模型 todo 更换试试
+    # 降噪模型 todo 更换试试 TensorFlow设置GPU
     model = "DTLN/pretrained_model/model.h5"
     # determine type of model
     if model.find('_norm_') != -1:
