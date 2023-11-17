@@ -75,7 +75,6 @@ def process_audio_file(modelClass, vfile, wav_path):
     except:
         traceback.print_exc()
     else:
-        os.rename(wav_path, os.path.join(os.path.dirname(wav_path), "origin.wav"))
         shutil.move(noise_depressed_audio_path, os.path.abspath(wav_path))
     finally:
         if os.path.exists(noise_depressed_audio_path):
