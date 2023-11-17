@@ -85,8 +85,12 @@ if __name__ == '__main__':
     parser.add_argument("--split_mode", help="切片模式：0：按声音停顿切片 1：:按固定5s间隔",
                         type=int,
                         default=0)
-    parser.add_argument("--n_processes", help="Workers number", type=int, default=os.cpu_count() + 2)
+    parser.add_argument("--n_processes",
+                        help="Workers number(由于使用外部库有缓存文件的机制，导致多进程的共享资源混乱，所以现在不支持多进程worker)",
+                        type=int, default=os.cpu_count() + 2)
     args = parser.parse_args()
+    # 由于使用内部库有缓存文件的机制，导致多进程的共享资源混乱，所以不支持多进程worker
+    args.n_processes = 1
 
     videos_dir = os.path.abspath(args.source_videos_dir)
     if not os.path.isdir(videos_dir):
