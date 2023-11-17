@@ -89,11 +89,9 @@ if __name__ == '__main__':
                         type=int,
                         default=0)
     parser.add_argument("--n_processes",
-                        help="Workers number(由于使用外部库有缓存文件的机制，导致多进程的共享资源混乱，所以现在不支持多进程worker)",
+                        help="Workers number)",
                         type=int, default=os.cpu_count() + 2)
     args = parser.parse_args()
-    # 由于使用内部库有缓存文件的机制，导致多进程的共享资源混乱，所以不支持多进程worker
-    args.n_processes = 1
 
     videos_dir = os.path.abspath(args.source_videos_dir)
     if not os.path.isdir(videos_dir):
