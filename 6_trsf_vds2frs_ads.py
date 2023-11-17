@@ -1,5 +1,7 @@
 # 将视频转为帧图片保存 提取视频的音轨保存为wav文件、mel频谱文件
+import shutil
 import sys
+import uuid
 from typing import List
 
 if sys.version_info[0] < 3 and sys.version_info[1] < 2:
@@ -13,10 +15,15 @@ import face_alignment
 import torch
 import audio
 
+sys.path.append(os.path.abspath("./DTLN"))
+
+from DTLN.DTLN_model import DTLN_model
+from DTLN.run_evaluation import process_file
+
 
 # template2 = 'ffmpeg -hide_banner -loglevel panic -threads 1 -y -i {} -async 1 -ac 1 -vn -acodec pcm_s16le -ar 16000 {}'
 
-def process_video_file(vfile: str, args, gpu_id):
+def process_video_file(vfile: str, args, gpu_id, modelClass):
     # 保存该视频的帧图片和声音的文件夹
     output_dir = vfile.replace(videos_dir, output_root)[:-4]
     # 检查是否已经存在
@@ -54,14 +61,26 @@ def process_video_file(vfile: str, args, gpu_id):
     # 存为图片
     for i, face_rect in enumerate(face_rects):
         cv2.imwrite(path.join(output_dir, '{}.jpg'.format(i)), face_rect)
+    process_audio_file(modelClass, vfile, path.join(output_dir, 'audio.wav'))
 
-    process_audio_file(vfile, path.join(output_dir, 'audio.wav'))
 
-
-def process_audio_file(vfile, wav_path):
+def process_audio_file(modelClass, vfile, wav_path):
     command = template.format(vfile, wav_path)
     # subprocess.run(command, shell=True)
     os.system(command)
+
+    noise_depressed_audio_path = f"/dev/shm/{uuid.uuid4()}.wav"
+    try:
+        process_file(modelClass.model, wav_path, noise_depressed_audio_path)
+    except:
+        traceback.print_exc()
+    else:
+        os.rename(wav_path, os.path.join(os.path.dirname(wav_path), "origin.wav"))
+        shutil.move(noise_depressed_audio_path, os.path.abspath(wav_path))
+    finally:
+        if os.path.exists(noise_depressed_audio_path):
+            os.remove(noise_depressed_audio_path)
+
     # 存mel频谱
     wav = audio.load_wav(wav_path, 16000)
     mel = audio.melspectrogram(wav).T  # (T, 80)
@@ -70,9 +89,9 @@ def process_audio_file(vfile, wav_path):
 
 
 def mp_handler(job):
-    vfile, args, gpu_id = job
+    vfile, args, gpu_id, modelClass = job
     try:
-        process_video_file(vfile, args, gpu_id)
+        process_video_file(vfile, args, gpu_id, modelClass)
     except KeyboardInterrupt:
         exit(0)
     except:
@@ -117,10 +136,24 @@ if __name__ == '__main__':
                                                                            device='cuda:{}'.format(gpuid),
                                                                            face_detector='sfd')
                                               for gpuid in range(args.ngpu)]
+    # 降噪模型
+    model = "DTLN/pretrained_model/model.h5"
+    # determine type of model
+    if model.find('_norm_') != -1:
+        norm_stft = True
+    else:
+        norm_stft = False
+    # create class instance
+    modelClass = DTLN_model()
+    # build the model in default configuration
+    modelClass.build_DTLN_model(norm_stft=norm_stft)
+    # load weights of the .h5 file
+    modelClass.model.load_weights(model)
+
     template = 'ffmpeg -loglevel panic -y -i {} -strict -2 {}'
     print('Started processing for {} with {} GPUs'.format(videos_dir, args.ngpu))
 
-    jobs = [(video_path, args, i % args.ngpu) for i, video_path in enumerate(video_paths)]
+    jobs = [(video_path, args, i % args.ngpu, modelClass) for i, video_path in enumerate(video_paths)]
     imgs_pool_executor = ThreadPoolExecutor(args.ngpu)
     futures = [imgs_pool_executor.submit(mp_handler, j) for j in jobs]
     _ = [r.result() for r in tqdm(as_completed(futures), total=len(futures))]
