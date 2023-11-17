@@ -37,6 +37,9 @@ def split_video(video_paths: List[str], split_mode=0, clip_duration=5):
                        os.path.join(split_videos_dir4one, f"{i}.mp4"), "-y"]
                 subprocess.run(cmd, check=True)
     elif split_mode == 0:
+        from moviepy.video import VideoClip
+        VideoClip.Clip._TEMP_FILES_PREFIX = str(uuid.uuid4())
+        # Clip._TEMP_FILES_PREFIX = str(uuid.uuid4())
         for video_path in video_paths:
             video = VideoFileClip(video_path)
             audio = video.audio
