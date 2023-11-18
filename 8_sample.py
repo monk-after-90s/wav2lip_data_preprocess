@@ -9,15 +9,17 @@ parser.add_argument("--frames_audios_dir",
                     type=str,
                     required=True)
 parser.add_argument("--filelists_dir",
-                    help="The directory which contains filelists output txt files",
+                    help="The directory which contains filelists output txt files. If not provided, it will be in directory 'filelists' in '--frames_audios_dir'",
                     type=str,
-                    default="dataset/filelists")
+                    default="")
 
 args = parser.parse_args()
 frames_audios_dir = os.path.abspath(args.frames_audios_dir)
 if not os.path.isdir(frames_audios_dir):
     raise ValueError("please input the path of a directory")
 
+if not args.filelists_dir:
+    args.filelists_dir = os.path.join(frames_audios_dir, "filelists")
 # 搜集音画包文件夹
 video_frams_audios_dirs = set()
 for root, dirs, files in os.walk(frames_audios_dir):
