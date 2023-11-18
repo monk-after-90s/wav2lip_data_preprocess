@@ -1,8 +1,11 @@
 # 将视频转为帧图片保存 提取视频的音轨保存为wav文件、mel频谱文件
 import shutil
 import sys
+import time
 import uuid
 from typing import List
+
+from torch.cuda import OutOfMemoryError
 
 if sys.version_info[0] < 3 and sys.version_info[1] < 2:
     raise Exception("Must be using >= Python 3.2")
@@ -89,12 +92,23 @@ def process_audio_file(modelClass, vfile, wav_path):
 
 def mp_handler(job):
     vfile, args, gpu_id, modelClass = job
-    try:
-        process_video_file(vfile, args, gpu_id, modelClass)
-    except KeyboardInterrupt:
-        exit(0)
-    except:
-        traceback.print_exc()
+
+    retry_count = 5
+    for i in range(retry_count):
+        try:
+            process_video_file(vfile, args, gpu_id, modelClass)
+        except KeyboardInterrupt:
+            exit(0)
+        except OutOfMemoryError:
+            if i >= retry_count - 1:  # 重试结束
+                traceback.print_exc()
+            else:  # 重试
+                time.sleep(3)
+        except:
+            traceback.print_exc()
+            break
+        else:
+            break
 
 
 if __name__ == '__main__':
