@@ -74,7 +74,8 @@ def process_audio_file(modelClass, vfile, wav_path):
 
     noise_depressed_audio_path = f"/dev/shm/{uuid.uuid4()}.wav"
     try:
-        process_file(modelClass.model, wav_path, noise_depressed_audio_path)
+        process_file(modelClass.model, wav_path,
+                     noise_depressed_audio_path)  # fixme triggered tf.function retracing. Tracing is expensive
     except:
         traceback.print_exc()
     else:
@@ -94,7 +95,7 @@ def mp_handler(job):
     vfile, args, gpu_id, modelClass = job
 
     retry_count = 5
-    for i in range(retry_count):
+    for i in range(retry_count):  # todo 推广
         try:
             process_video_file(vfile, args, gpu_id, modelClass)
         except KeyboardInterrupt:
